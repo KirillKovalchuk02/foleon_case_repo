@@ -1,0 +1,23 @@
+# ----------------------------------------
+# General Ignored Files (OS & Editors)
+# ----------------------------------------
+.DS_Store
+.vscode/
+.idea/
+*~
+*.swp
+Thumbs.db
+desktop.ini
+
+# ----------------------------------------
+# Python/Virtual Environment
+# ----------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+pip-log.txt
+pip-delete-this-arg.txt
