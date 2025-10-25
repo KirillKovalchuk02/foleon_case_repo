@@ -1,0 +1,25 @@
+[0m15:24:56.413718 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f555c70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100addc0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100adb20>]}
+
+
+============================== 15:24:56.425602 | d3f6520d-b34a-491a-ab3a-122caf359606 ==============================
+[0m15:24:56.425602 [info ] [MainThread]: Running with dbt=1.11.0-b3
+[0m15:24:56.426815 [debug] [MainThread]: running dbt with arguments {'send_anonymous_usage_stats': 'True', 'profiles_dir': '/Users/kirillkovalchuk/.dbt', 'printer_width': '80', 'log_path': 'logs', 'empty': 'None', 'indirect_selection': 'eager', 'no_print': 'None', 'write_json': 'True', 'debug': 'False', 'warn_error': 'None', 'introspect': 'True', 'use_experimental_parser': 'False', 'cache_selected_only': 'False', 'static_parser': 'True', 'partial_parse': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'target_path': 'None', 'fail_fast': 'False', 'log_format': 'default', 'invocation_command': 'dbt init mta_poc', 'quiet': 'False', 'log_cache_events': 'False', 'version_check': 'True', 'use_colors': 'True'}
+[0m15:24:56.463314 [info ] [MainThread]: Creating dbt configuration folder at /Users/kirillkovalchuk/.dbt
+[0m15:24:56.467299 [debug] [MainThread]: Starter project path: /Users/kirillkovalchuk/Downloads/foleon_case_repo/venv/lib/python3.12/site-packages/dbt/include/starter_project
+[0m15:24:56.481548 [info ] [MainThread]: 
+Your new dbt project "mta_poc" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m15:24:56.482594 [info ] [MainThread]: Setting up your profile.
