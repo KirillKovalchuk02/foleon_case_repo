@@ -1,35 +1,30 @@
--- Reorganize the GA4 raw table
-
-WITH base events AS(
-    SELECT *
-    FROM {{ ref('stg_ga4_events') }}
-),
-
-
-session_landing AS (
+-- all the events
+WITH base_events AS (
     SELECT
-        CONCAT(session_id, '_landing') AS event_id,
+        event_id,
         user_id,
         session_id,
-        'landing_on_website' AS event_name,
-        'session_start' AS event_type,
-        MIN(event_timestamp) AS event_timestamp,
-        NULL AS page_location,
+        event_name,
+        event_type,
+        event_timestamp,
+        page_location,
         traffic_source_source,
         traffic_source_medium,
         campaign_id,
-        ga_client_id,
-        CASE
-            WHEN traffic_source_medium IN ('cpc', 'paid_social') THEN 'paid'
-            ELSE 'organic'
-        END AS touch_type,
-        'landing' AS touch_category
-    FROM base_events
-    GROUP BY
-        session_id, user_id, traffic_source_source, traffic_source_medium, campaign_id, ga_client_id
+        ga_client_id
+    FROM {{ ref('stg_ga4_events') }}
+    -- WHERE event_name IN (
+    --     'session_start',
+    --     'page_view',
+    --     'form_submit',
+    --     'generate_lead',
+    --     'purchase',
+    --     'request_quote'
+    -- )
 ),
 
-real_events AS (
+-- apply a touchpoint and source of traffic classification 
+classified_touches AS (
     SELECT
         event_id,
         user_id,
@@ -42,30 +37,47 @@ real_events AS (
         traffic_source_medium,
         campaign_id,
         ga_client_id,
-        -- categorize touches
+
+        -- source type
         CASE
-            WHEN event_type IN ('page_view','form_submit','quote_request') THEN 'website'
             WHEN traffic_source_medium IN ('cpc', 'paid_social') THEN 'paid'
+            WHEN traffic_source_medium IN ('organic', 'referral', 'email') THEN 'organic'
             ELSE 'other'
-        END AS touch_type,
+        END AS source_type,
+
+        -- categorize the events -> to be extended, just for showcase purposes
         CASE
-            WHEN event_type IN ('page_view','form_submit','quote_request') THEN 'website'
+            WHEN event_name = 'session_start' THEN 'landing'
+            WHEN event_name IN ('form_submit','generate_lead','request_quote') THEN 'conversion'
+            WHEN event_name = 'purchase' THEN 'purchase'
+            WHEN event_name = 'page_view' THEN 'engagement'
             ELSE 'other'
         END AS touch_category
     FROM base_events
-    WHERE event_type IN ('page_view','form_submit','quote_request','session_start')
 ),
 
-
-all_touches AS (
-    SELECT * FROM session_landing
-    UNION ALL
-    SELECT * FROM real_events
+--order events within sessions
+ordered_touches AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY user_id, session_id ORDER BY event_timestamp) AS touch_order
+    FROM classified_touches
 )
 
--- Order touches chronologically
 SELECT
-    *,
-    ROW_NUMBER() OVER (PARTITION BY user_id, session_id ORDER BY event_timestamp) AS touch_order
-FROM all_touches
+    event_id,
+    user_id,
+    session_id,
+    ga_client_id,
+    event_name,
+    event_type,
+    event_timestamp,
+    page_location,
+    traffic_source_source,
+    traffic_source_medium,
+    campaign_id,
+    source_type,
+    touch_category,
+    touch_order
+FROM ordered_touches
 ORDER BY user_id, session_id, event_timestamp

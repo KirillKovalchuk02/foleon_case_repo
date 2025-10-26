@@ -25,6 +25,7 @@ contacts AS (
     WHERE ga_client_id IS NOT NULL
 ),
 
+-- for each contact get all the associated events from ga4
 joined AS (
     SELECT
         c.contact_id,
@@ -39,9 +40,9 @@ joined AS (
         t.touch_type,
         t.event_date
     FROM contacts c
-    LEFT JOIN touchpoints t
+    INNER JOIN touchpoints t --to remove the customers with no associated ga4 sessions as for those it is infeasible to track their customer journey
     ON c.ga_client_id = t.ga_client_id
-    AND TIMESTAMP_MILLIS(t.event_timestamp) <= c.contact_created_at
+    --AND TIMESTAMP_MILLIS(t.event_timestamp) <= c.contact_created_at
 )
 
 SELECT
