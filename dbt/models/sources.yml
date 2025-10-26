@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    tables:
+      - name: google_ads
+      - name: linkedin_ads
+      - name: ga4_events
+      - name: hubspot_contacts
+      - name: hubspot_deals
