@@ -20,28 +20,36 @@ WITH ordered AS (
         campaign_id,
         campaign_name,
         total_cost_campaign,
-        cost_per_click
-    FROM {{ ref('int_deals_customer_journey') }}
+    FROM {{ ref('int_full_joined') }}
 ),
-
-filtered_touchpoints AS (
-    SELECT *
-    FROM ordered
-    WHERE touch_category IN ('landing', 'conversion', 'engagement') -- The filter to choose the events that are considered touches -> to be discussed with the team
-    --or WHERE event_name IN ('', '', '')
-)
-
 
 revenue_attribution AS (
     SELECT
         t.*,
         COUNT(*) OVER (PARTITION BY t.deal_id) AS num_touches, 
         SAFE_DIVIDE(t.revenue_amount, COUNT(*) OVER (PARTITION BY t.deal_id)) AS revenue_attributed  --assuming linear attribution for simplicity
-    FROM filtered_touchpoints t
+    FROM ordered t
+),
+
+total_aov_calculation AS(
+    SELECT contact_id,
+            COUNT(deal_id) as number_of_deals,
+            SUM(revenue_amount) as total_revenue,
+            SUM(revenue_amount) / COUNT(deal_id) as total_aov
+    FROM revenue_attribution
+    GROUP BY 1
 )
 
-SELECT *
-FROM revenue_attribution
+
+SELECT ra.*,
+        aov.total_aov,
+CASE WHEN ad_platform IS NULL 
+    THEN 1 
+    ELSE 0 
+END AS is_offline               -- offline-based deals flag
+FROM revenue_attribution ra
+LEFT JOIN total_aov_calculation aov
+ON ra.contact_id = aov.contact_id
 
 
 

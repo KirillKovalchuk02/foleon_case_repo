@@ -1,0 +1,128 @@
+version: 2
+sources:
+  - name: raw_1
+    description: "Raw data schema containing HubSpot CRM exports."
+    tables:
+      - name: hubspot_contacts
+        description: "Raw HubSpot contacts table with all contact-level CRM information."
+        columns:
+          - name: contact_id
+            description: "Unique identifier for the HubSpot contact."
+          - name: email
+            description: "Primary email address of the contact."
+          - name: first_name
+            description: "Contact's first name."
+          - name: last_name
+            description: "Contact's last name."
+          - name: date_created
+            description: "Date when the contact was first created in HubSpot."
+          - name: lifecycle_stage
+            description: "Current lifecycle stage of the contact (e.g. Lead, MQL, Customer)."
+          - name: ga_user_id
+            description: "Google Analytics user/client ID associated with the contact."
+          - name: created_at
+            description: "Timestamp when the contact record was created in HubSpot."
+
+  - name: raw_2
+    description: "Raw data schema containing event-level exports from Google Analytics 4."
+    tables:
+      - name: ga4_events
+        description: "Raw GA4 export table with all website event data."
+        columns:
+          - name: event_id
+            description: "Unique identifier for the GA4 event record."
+          - name: user_id
+            description: "GA4 client identifier for the user generating the event."
+          - name: session_id
+            description: "Identifier for the session in which the event occurred."
+          - name: event_name
+            description: "The name of the event (e.g. page_view, session_start, form_submit)."
+          - name: event_timestamp
+            description: "Timestamp of when the event occurred, in milliseconds."
+          - name: page_location
+            description: "Full URL of the page where the event occurred."
+          - name: traffic_source_source
+            description: "Source of traffic that initiated the session (e.g. google, linkedin)."
+          - name: traffic_source_medium
+            description: "Medium of traffic (e.g. cpc, organic, paid_social)."
+          - name: campaign_id
+            description: "Marketing campaign ID if available (from UTM tagging or GA tracking)."
+          - name: event_type
+            description: "High-level classification of event type (e.g., conversion, engagement)."
+
+models:
+  - name: stg_ga4_events
+    description: >
+      Staging model that cleans and standardizes Google Analytics 4 events data.
+      It selects relevant fields and enforces a unique event_id per record.
+    columns:
+      - name: event_id
+        description: "Unique identifier for the event."
+        tests:
+          - not_null
+          - unique
+
+      - name: user_id
+        description: "Unique GA4 client identifier (user_pseudo_id)."
+        tests:
+          - not_null
+
+      - name: session_id
+        description: "Session ID grouping multiple events from the same user visit."
+
+      - name: event_name
+        description: "Event name recorded in GA4 (e.g. session_start, page_view, click)."
+
+      - name: event_type
+        description: "Standardized category of the event."
+
+      - name: event_timestamp
+        description: "Timestamp when the event occurred."
+
+      - name: page_location
+        description: "URL where the event occurred."
+
+      - name: traffic_source_source
+        description: "Source of the traffic (e.g. google, linkedin)."
+
+      - name: traffic_source_medium
+        description: "Medium of the traffic (e.g. cpc, organic, paid_social)."
+
+      - name: campaign_id
+        description: "Marketing campaign identifier if applicable."
+
+  - name: stg_hubspot_contacts
+    description: >
+      Staging model that cleans and standardizes HubSpot contact data.
+      This model prepares contacts for joining with Google Analytics 4 events using the GA user ID.
+    columns:
+      - name: contact_id
+        description: "Unique HubSpot contact ID used as a primary key."
+        tests:
+          - not_null
+          - unique
+
+      - name: email
+        description: "Primary email address of the contact."
+        tests:
+          - not_null
+
+      - name: first_name
+        description: "Contact's first name."
+
+      - name: last_name
+        description: "Contact's last name."
+
+      - name: date_created
+        description: "Date the contact was created in HubSpot (date type)."
+
+      - name: lifecycle_stage
+        description: "Lifecycle stage of the contact within HubSpot (Lead, MQL, SQL, Customer, etc.)."
+
+      - name: ga_user_id
+        description: "Google Analytics client ID (ga_client_id) used for stitching marketing touchpoints."
+        tests:
+          - not_null
+
+      - name: contact_created_timestamp
+        description: "Timestamp representing exact creation time of the contact record in HubSpot."

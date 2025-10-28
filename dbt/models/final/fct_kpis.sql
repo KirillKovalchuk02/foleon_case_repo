@@ -19,7 +19,7 @@ SELECT
     SAFE_DIVIDE(total_attributed_revenue, total_campaign_cost) AS return_on_ad_spend,  --roas
     SAFE_DIVIDE(total_campaign_cost, customers_acquired) AS cost_per_acquisition, 
     SAFE_DIVIDE(total_influenced_revenue, deals_influenced) AS average_order_value_per_campaign
-    --can add more stuff here
+    --can add more metrics here if needed
 
 FROM campaign_kpis
 

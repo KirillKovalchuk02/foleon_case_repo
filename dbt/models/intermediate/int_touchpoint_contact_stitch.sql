@@ -8,6 +8,7 @@ WITH touchpoints AS (
         event_name,
         traffic_source_source,
         traffic_source_medium,
+        campaign_name,
         touch_type,
         event_date
     FROM {{ ref('int_marketing_touchpoints') }}
@@ -42,7 +43,6 @@ joined AS (
     FROM contacts c
     INNER JOIN touchpoints t --to remove the customers with no associated ga4 sessions as for those it is infeasible to track their customer journey
     ON c.ga_client_id = t.ga_client_id
-    --AND TIMESTAMP_MILLIS(t.event_timestamp) <= c.contact_created_at
 )
 
 SELECT
@@ -59,4 +59,14 @@ SELECT
     ROW_NUMBER() OVER (PARTITION BY contact_id ORDER BY event_timestamp) AS touchpoint_order
 FROM joined
 WHERE session_id IS NOT NULL
+AND traffic_source_medium IN ( --the filters ensure only the sessions originating from our paid channels are included
+        'cpc',
+        'paid_search',
+        'paid_social'
+    )
+    AND traffic_source_source IN (
+        'google',
+        'facebook'
+
+    ) -- the filters on what touchpoints/events to be included should be adjusted in collaboration with the team
 ORDER BY contact_id, touchpoint_order

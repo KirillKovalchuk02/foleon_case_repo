@@ -4,8 +4,6 @@ WITH deals_with_window_start AS (
         contact_id,
         deal_id,
         deal_name,
-        -- deal_stage,
-        -- deal_stage_entered,
         deal_closed,
         revenue_amount,
         currency,
@@ -31,29 +29,29 @@ joined AS (
         cj.event_name,
         cj.traffic_source_source,
         cj.traffic_source_medium,
+        cj.campaign_name, 
         cj.touch_type,
         cj.touchpoint_order,
         d.deal_id,
         d.deal_name,
-        -- d.deal_stage, 
-        -- d.deal_stage_entered,
         d.deal_closed,
         d.revenue_amount,
         d.currency,
         d.is_won_deal
-    FROM {{ ref('int_touchpoint_contact_stitch') }} cj
-    INNER JOIN deals_with_window_start d
+    FROM deals_with_window_start d
+    LEFT JOIN {{ ref('int_touchpoint_contact_stitch') }} cj --this way we get all the deals for each client
         ON cj.contact_id = d.contact_id
-
     -- A touchpoint is relevant to deal 'd' only if:
     -- 1. It occurred AFTER the previous deal closed (d.previous_deal_close_date).
     -- 2. It occurred BEFORE or AT the current deal closed (d.deal_closed).
     -- plus the 90 days lookback window 
-    WHERE 
-        cj.event_date > d.previous_deal_close_date
-        AND cj.event_date <= d.deal_closed
-        AND cj.event_date >= DATE_SUB(d.deal_closed, INTERVAL 90 DAY)
+
+    AND cj.event_date > COALESCE(d.previous_deal_close_date, DATE_SUB(d.deal_closed, INTERVAL 90 DAY))
+    AND cj.event_date <= d.deal_closed
+    AND cj.event_date >= DATE_SUB(d.deal_closed, INTERVAL 90 DAY)
 )
+
+
 
 SELECT
     contact_id,
@@ -62,10 +60,27 @@ SELECT
     session_id,
     event_date,
     event_name,
-    traffic_source_source,
-    traffic_source_medium,
-    touch_type,
-    touchpoint_order,
+    CASE 
+        WHEN cj.session_id IS NULL THEN 'offline'
+        ELSE cj.traffic_source_source
+    END AS traffic_source_source,
+
+    CASE 
+        WHEN cj.session_id IS NULL THEN 'direct'
+        ELSE cj.traffic_source_medium
+    END AS traffic_source_medium,
+
+    CASE
+        WHEN cj.session_id IS NULL THEN 'offline'
+        ELSE cj.touch_type
+    END AS touch_type,
+
+    CASE
+        WHEN cj.session_id IS NULL THEN 'offline'
+        ELSE cj.campaign_name
+    END AS campaign_name,
+
+    COALESCE(touchpoint_order, 1) AS touchpoint_order,
     deal_id,
     deal_name,
     deal_closed,

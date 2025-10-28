@@ -10,17 +10,11 @@ WITH base_events AS (
         page_location,
         traffic_source_source,
         traffic_source_medium,
+        traffic_source_name as campaign_name,
         campaign_id,
         ga_client_id
     FROM {{ ref('stg_ga4_events') }}
-    -- WHERE event_name IN (
-    --     'session_start',
-    --     'page_view',
-    --     'form_submit',
-    --     'generate_lead',
-    --     'purchase',
-    --     'request_quote'
-    -- )
+   
 ),
 
 -- apply a touchpoint and source of traffic classification 
